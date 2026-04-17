@@ -7,8 +7,8 @@
 ## 1. Deployment Summary
 
 ### Contract Addresses (Sepolia)
-- **Token Contract (Stage1)**: `0x________________`
-- **Dice Contract (Stage2)**: `0x________________`
+- **Token Contract (Stage1)**: `0xFcCd035eDF9Cb7040D5825CE320f62AD1c7562Ea`
+- **Dice Contract (Stage2)**: `0x75142ba7e66DD0c04B3b146e2f97DF963f1BbF9F`
 
 ### Tooling Used
 - Remix IDE for compilation, deployment, and interaction
@@ -170,18 +170,18 @@ stateDiagram-v2
 
 | Contract | Estimated Gas | Notes |
 |----------|---------------|-------|
-| Stage1 (Token) | ~800,000 | Includes storage for balances, name, symbol |
-| Stage2 (Dice) | ~1,200,000 | Includes state machine, multiple storage variables |
+| Stage1 (Token) | 1222508 | Includes storage for balances, name, symbol |
+| Stage2 (Dice) | 2301865 | Includes state machine, multiple storage variables |
 
 ### Typical Full Game Gas
 
 | Operation | Estimated Gas | Who Pays |
 |-----------|---------------|----------|
-| createDiceGame | ~150,000 | Player A |
-| joinGame | ~120,000 | Player B |
-| revealA | ~80,000 | Player A |
-| revealB + settle | ~180,000 | Player B |
-| **Total** | ~530,000 | Split: A ~230k, B ~300k |
+| createDiceGame | 120417 | Player A |
+| joinGame | 100232 | Player B |
+| revealA | 75817 | Player A |
+| revealB + settle | 120010 | Player B |
+| **Total** | 416476 | Split: A 196234, B 220242 |
 
 ### Fairness Analysis
 
@@ -202,17 +202,17 @@ stateDiagram-v2
 
 | Step | Transaction Hash | Description |
 |------|------------------|-------------|
-| Create Game | `0x________________` | Player A creates game with 0.01 ETH bet |
-| Join Game | `0x________________` | Player B joins with matching 0.01 ETH bet |
-| Reveal A | `0x________________` | Player A reveals secret |
-| Reveal B | `0x________________` | Player B reveals secret, triggers settlement |
+| Create Game | `0x6331c4a3db2f56c18e7fb6829c56701847d4335718e3c8c8eca2db3dec1bcf5a` | Player A creates game with 0.01 ETH bet |
+| Join Game | `0x90f9573051dc3ef40a18e910bfca3a4f2301dc3706ff885932f22e71e50c78d2` | Player B joins with matching 0.01 ETH bet |
+| Reveal A | `0x13b3c6737ebd4dcd467116f506733ef0be5d95579306bc2ae0e94236cf783dd0` | Player A reveals secret |
+| Reveal B | `0xd0b42a6178041a4c293b614c97a1c208cb73cc351baf142d0f12b78817d6e013` | Player B reveals secret, triggers settlement |
 
 ### Token Pool Evidence
 
 | Event | Transaction Hash | Details |
 |-------|------------------|---------|
-| Pool Funding | `0x________________` | 10000 DICE transferred to Stage2 |
-| Bonus Transfer | `0x________________` | 100 DICE sent to winner |
+| Pool Funding | `0xd3162a40254662e05b1d746826c78fa32b48d9e9e59219a82beffce16d2da3c0` | 10000 DICE transferred to Stage2 |
+| Bonus Transfer | `0xd0b42a6178041a4c293b614c97a1c208cb73cc351baf142d0f12b78817d6e013` | 100 DICE sent to winner |
 
 ### Balance Verification
 
@@ -250,21 +250,21 @@ We hereby solemnly declare that all team members have personally reviewed, teste
 
 | # | Operation | Transaction Hash | Notes |
 |---|-----------|------------------|-------|
-| 1 | Deploy | `0x________________` | Constructor: name="DiceToken", symbol="DICE" |
-| 2 | Mint | `0x________________` | Mint 1000 DICE to deployer |
-| 3 | Transfer | `0x________________` | Transfer 100 DICE to test address |
-| 4 | Sell | `0x________________` | Sell 50 DICE for 30000 wei |
+| 1 | Deploy | `0x7bfc07843bad465896ca8285ab727f22868b6397d543550b5868068ba7aa69fc` | Constructor: name="DiceToken", symbol="DICE" |
+| 2 | Mint | `0xd2246b5311b0f36d1f1e68a5dfae6fd51f47bd08322ed69b06c5a5c40c00dc24` | Mint 1000 DICE to deployer |
+| 3 | Transfer | `0xdce3300d9bb9c12cd7ef0f824deb771ff0159feb80c83059e643f9f39ffa1f1f` | Transfer 100 DICE to test address |
+| 4 | Sell | `0xd3c5509590fcc92bbb8c4a7dbc4fb0505a6866200f1beb6c53ef6066a7836cb6` | Sell 50 DICE for 30000 wei |
 
 ### Stage 2 Dice Transactions
 
 | # | Operation | Transaction Hash | Notes |
 |---|-----------|------------------|-------|
-| 1 | Deploy | `0x________________` | Constructor: tokenContract=Stage1 address |
-| 2 | Fund Pool | `0x________________` | Transfer 10000 DICE to Stage2 |
-| 3 | Create Game | `0x________________` | Player A, 0.01 ETH bet |
-| 4 | Join Game | `0x________________` | Player B, 0.01 ETH bet |
-| 5 | Reveal A | `0x________________` | Player A reveals secret |
-| 6 | Reveal B | `0x________________` | Player B reveals, settlement |
+| 1 | Deploy | `0xc6455e736177a39d70c308a78c227fee086c04a26d34283e6227afeb89e20c37` | Constructor: tokenContract=Stage1 address |
+| 2 | Fund Pool | `0xd3162a40254662e05b1d746826c78fa32b48d9e9e59219a82beffce16d2da3c0` | Transfer 10000 DICE to Stage2 |
+| 3 | Create Game | `0x6331c4a3db2f56c18e7fb6829c56701847d4335718e3c8c8eca2db3dec1bcf5a` | Player A, 0.01 ETH bet |
+| 4 | Join Game | `0x90f9573051dc3ef40a18e910bfca3a4f2301dc3706ff885932f22e71e50c78d2` | Player B, 0.01 ETH bet |
+| 5 | Reveal A | `0x13b3c6737ebd4dcd467116f506733ef0be5d95579306bc2ae0e94236cf783dd0` | Player A reveals secret |
+| 6 | Reveal B | `0xd0b42a6178041a4c293b614c97a1c208cb73cc351baf142d0f12b78817d6e013` | Player B reveals, settlement |
 
 ---
 
