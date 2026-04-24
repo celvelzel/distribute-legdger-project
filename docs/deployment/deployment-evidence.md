@@ -58,12 +58,12 @@
 
 #### 3. Reveal A
 - **交易哈希**: `0x________________`
-- **Secret A**: `keccak256(abi.encodePacked("secretA123"))`
+- **Secret A**: `0x________________`（原始 `bytes32`，其 keccak256 应与 Fingerprint A 一致）
 - **Etherscan**: https://sepolia.etherscan.io/tx/0x________________
 
 #### 4. Reveal B
 - **交易哈希**: `0x________________`
-- **Secret B**: `keccak256(abi.encodePacked("secretB456"))`
+- **Secret B**: `0x________________`（原始 `bytes32`，其 keccak256 应与 Fingerprint B 一致）
 - **Etherscan**: https://sepolia.etherscan.io/tx/0x________________
 
 #### 5. 结算结果
@@ -95,3 +95,7 @@
 - 测试网络: Sepolia
 - 使用工具: Remix IDE + MetaMask
 - 测试日期: ____-__-__
+
+---
+
+最后更新：2026-04-24

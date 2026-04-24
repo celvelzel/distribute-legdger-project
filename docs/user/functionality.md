@@ -1,6 +1,6 @@
 # 功能说明文档
 
-本文档详细介绍分布式账本项目的各个功能模块和技术实现。
+本文档基于当前源码（`contracts/Stage1.sol`、`contracts/Stage2.sol`）描述真实功能。
 
 ## 目录
 
@@ -33,7 +33,7 @@
                            ▼
 ┌─────────────────────────────────────────────────────────┐
 │                  Stage1 Token Contract                   │
-│  - ERC20 代币                                           │
+│  - 自定义代币（严格 API，非完整 ERC20）                   │
 │  - 代币铸造                                             │
 │  - 代币销售                                             │
 │  - ETH 管理                                            │
@@ -48,10 +48,10 @@
 
 | 函数 | 描述 | 权限 |
 |------|------|------|
-| `name()` | 返回代币名称 | 公开 |
-| `symbol()` | 返回代币符号 | 公开 |
+| `getName()` | 返回代币名称 | 公开 |
+| `getSymbol()` | 返回代币符号 | 公开 |
 | `totalSupply()` | 返回总供应量 | 公开 |
-| `pricePerToken()` | 返回代币单价 (600 wei) | 公开 |
+| `getPrice()` | 返回代币单价 (600 wei) | 公开 |
 
 ### 1.2 余额查询
 
@@ -61,23 +61,16 @@ function balanceOf(address account) external view returns (uint256);
 
 返回指定账户的代币余额。
 
-### 1.3 代币授权
+### 1.3 API 边界说明（重要）
 
-符合 ERC20 标准，支持以下授权操作：
-
-| 函数 | 描述 |
-|------|------|
-| `approve(spender, amount)` | 授权指定地址可使用一定数量的代币 |
-| `allowance(owner, spender)` | 查询授权额度 |
-| `increaseAllowance(spender, addedValue)` | 增加授权额度 |
-| `decreaseAllowance(spender, subtractedValue)` | 减少授权额度 |
+Stage1 采用课程要求的**严格 API**，当前实现**不包含** `approve / allowance / transferFrom`。
+因此它不是完整 ERC20，而是用于本项目的自定义 Token 合约。
 
 ### 1.4 代币转账
 
 | 函数 | 描述 |
 |------|------|
 | `transfer(to, value)` | 从当前账户转账代币 |
-| `transferFrom(from, to, amount)` | 从授权账户转账代币 |
 
 ### 1.5 代币铸造（仅所有者）
 
@@ -100,26 +93,18 @@ function sell(uint256 value) external nonReentrant returns (bool);
 
 - **价格**: 600 wei / token
 - **流程**:
-  1. 用户授权代币给合约
-  2. 调用 sell() 函数
-  3. 合约扣除代币，发送ETH给用户
+  1. 调用 `sell(value)`
+  2. 合约扣除调用者余额并减少总供应
+  3. 合约向调用者发送对应 ETH
   4. 触发 `Sell` 事件
 
-### 1.7 ETH 提取（仅所有者）
+### 1.7 关闭合约（仅所有者）
 
 ```solidity
-function withdraw() external nonReentrant;
+function close() external;
 ```
 
-合约所有者可以提取合约中的所有ETH。
-
-### 1.8 紧急代币提取（仅所有者）
-
-```solidity
-function emergencyWithdrawToken(address tokenAddress, uint256 amount) external nonReentrant;
-```
-
-当合约意外收到其他代币时，所有者可以提取出来。
+合约所有者可执行 `selfdestruct(owner)`，并把剩余 ETH 转给 owner。
 
 ---
 
@@ -156,7 +141,7 @@ function emergencyWithdrawToken(address tokenAddress, uint256 amount) external n
 ### 2.2 游戏创建
 
 ```solidity
-function createDiceGame(bytes32 _fingerPrintForA) external payable nonReentrant;
+function createDiceGame(bytes32 _fingerPrintForA) external payable;
 ```
 
 **参数说明：**
@@ -176,7 +161,7 @@ function createDiceGame(bytes32 _fingerPrintForA) external payable nonReentrant;
 ### 2.3 加入游戏
 
 ```solidity
-function joinGame(bytes32 _fingerPrintForB) external payable nonReentrant;
+function joinGame(bytes32 _fingerPrintForB) external payable;
 ```
 
 **参数说明：**
@@ -190,8 +175,8 @@ function joinGame(bytes32 _fingerPrintForB) external payable nonReentrant;
 ### 2.4 揭示秘密
 
 ```solidity
-function revealA(bytes32 _secretA) external nonReentrant;
-function revealB(bytes32 _secretB) external nonReentrant;
+function revealA(bytes32 _secretA) external;
+function revealB(bytes32 _secretB) external;
 ```
 
 **参数说明：**
@@ -229,7 +214,7 @@ uint256 n = (uint256(randomSeed) % 6) + 1;  // 生成1-6的随机数
 ### 2.6 超时机制
 
 ```solidity
-function checkTimeout() external nonReentrant;
+function checkTimeout() external;
 function getRemainingTimeout() external view returns (uint256);
 ```
 
@@ -241,7 +226,7 @@ function getRemainingTimeout() external view returns (uint256);
 ### 2.7 取消游戏
 
 ```solidity
-function cancelGame() external nonReentrant;
+function cancelGame() external;
 function getRemainingCancelTime() external view returns (uint256);
 ```
 
@@ -256,20 +241,17 @@ function getRemainingCancelTime() external view returns (uint256);
 
 ### 3.1 重入攻击防护
 
-所有关键函数都使用了 `nonReentrant` 修饰器：
+Stage1 使用 `nonReentrant` 防护 `sell()`；
+Stage2 当前源码未使用 `nonReentrant` 修饰器，而是通过状态机 + CEI 顺序降低风险。
+
+关键结算路径遵循“先确定结算状态并发事件、再外部转账、最后重置”的流程，避免 winner 被提前清空。
 
 ```solidity
-modifier nonReentrant() {
-    require(!_locked, "Reentrant call");
-    _locked = true;
-    _;
-    _locked = false;
-}
+// Stage1.sell() 使用 nonReentrant
 ```
 
-**保护的函数：**
-- Stage1: `sell()`, `withdraw()`, `emergencyWithdrawToken()`
-- Stage2: `createDiceGame()`, `joinGame()`, `revealA()`, `revealB()`, `checkTimeout()`, `cancelGame()`
+**受保护函数：**
+- Stage1: `sell()`
 
 ### 3.2 Checks-Effects-Interactions 模式
 
@@ -320,7 +302,6 @@ bytes32 randomSeed = keccak256(abi.encodePacked(
 | `Transfer` | from, to, value | 代币转账 |
 | `Mint` | to, value | 代币铸造 |
 | `Sell` | from, value | 代币出售 |
-| `Approval` | owner, spender, value | 授权变更 |
 
 ### Stage2 事件
 
@@ -343,9 +324,10 @@ bytes32 randomSeed = keccak256(abi.encodePacked(
 | `WrongState` | expected, actual | 状态机错误 |
 | `InvalidParam` | message | 参数无效 |
 | `NotBetOwner` | caller, expected | 非游戏参与者 |
+| `DuplicateParticipant` | caller | 阻止同地址自对局 |
 | `RepeatedRevealed` | caller | 重复揭示 |
 | `BetMismatch` | expected, actual | 秘密不匹配 |
 
 ---
 
-*文档更新时间: 2026年3月*
+*文档更新时间: 2026-04-24*

@@ -2,6 +2,8 @@
 
 本指南将帮助您快速部署和使用分布式账本智能合约系统。
 
+> 说明：本指南对应当前仓库 `contracts/Stage1.sol` 与 `contracts/Stage2.sol`。
+
 ## 目录
 
 1. [部署准备](#部署准备)
@@ -75,32 +77,8 @@
 
 ### 方式二：使用 Hardhat
 
-1. **安装依赖**
-   ```bash
-   npm install
-   ```
-
-2. **配置网络**
-   在 `hardhat.config.js` 中配置测试网：
-
-   ```javascript
-   networks: {
-     sepolia: {
-       url: "https://rpc.sepolia.org",
-       accounts: ["YOUR_PRIVATE_KEY"]
-     }
-   }
-   ```
-
-3. **编译合约**
-   ```bash
-   npx hardhat compile
-   ```
-
-4. **部署脚本**
-   ```bash
-   npx hardhat run scripts/deploy.js --network sepolia
-   ```
+当前仓库默认是 Remix 工作流，未提供完整 Hardhat 工程配置（仅保留 `scripts/` 示例文件）。
+如需 Hardhat，请先自行初始化后再迁移 `contracts/` 目录。
 
 ---
 
@@ -152,13 +130,16 @@
 
 **玩家A揭示：**
 ```javascript
-await stage2Contract.revealA(secretA);
+await stage2Contract.revealA(secretABytes32);
 ```
 
 **玩家B揭示：**
 ```javascript
-await stage2Contract.revealB(secretB);
+await stage2Contract.revealB(secretBBytes32);
 ```
+
+注意：`revealA/revealB` 入参是 `bytes32` 原始秘密值，
+合约内部校验 `keccak256(abi.encodePacked(secret)) == fingerprint`。
 
 ### 阶段四：结算
 
@@ -220,9 +201,9 @@ await stage2Contract.cancelGame();
 
 ### Q5: 合约中没有足够的ETH支付奖金？
 
-确保 Stage2 合约有足够的ETH：
+确保相关合约有足够的 ETH：
 1. 游戏参与者的ETH会注入合约
-2. 或者由所有者向合约转入ETH
+2. 如果调用 `Stage1.sell()`，需确保 Stage1 合约先被充值 ETH
 
 ---
 
@@ -235,4 +216,4 @@ await stage2Contract.cancelGame();
 
 ---
 
-*文档更新时间: 2026年3月*
+*文档更新时间: 2026-04-24*

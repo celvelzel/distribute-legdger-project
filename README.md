@@ -1,117 +1,85 @@
-# Distribute Ledger Project (分布式账本项目)
+# Distribute Ledger Project
 
-一个基于以太坊智能合约的去中心化骰子对战游戏系统。
+基于 Solidity 的两阶段课程项目：
+- **Stage1**：自定义 Token 合约（严格 API）
+- **Stage2**：双人掷骰对战合约（Commit-Reveal + 奖励池）
 
-## 项目简介
+> 当前仓库以 `contracts/Stage1.sol`、`contracts/Stage2.sol` 为唯一源码真相。
 
-本项目包含两个核心智能合约：
+## 核心能力
 
-| 合约 | 功能描述 |
-|------|----------|
-| **Stage1.sol** | ERC20代币合约，提供游戏用的代币经济系统 |
-| **Stage2.sol** | 骰子对战游戏合约，支持双人公平对战 |
+- 双人等额 ETH 对局（A 建局，B 加入）
+- Commit-Reveal 揭示机制
+- 结算奖励：赢家获得全部 ETH + Stage1 代币奖励（默认每局最多 100）
+- 超时处理：`checkTimeout()`（30 分钟）
+- 等待加入期间可取消：`cancelGame()`（仅 A，30 分钟内）
+- Stage1 代币支持 `mint / transfer / sell / close`
 
-### 核心特性
+## 项目结构
 
-- **代币系统**: 完整的ERC20标准代币，支持铸造、交易、销毁
-- **公平对战**: 采用 Commit-Reveal 机制确保游戏公平性
-- **安全防护**: 重入攻击防护、多熵源随机数
-- **超时保护**: 30分钟超时机制，防止资金锁定
-
-## 技术栈
-
-- **智能合约**: Solidity ^0.8.0
-- **开发工具**: Remix IDE, Hardhat
-- **测试**: Foundry, Mocha/Chai
-
-## 快速开始
-
-### 环境要求
-
-- Node.js >= 16.0
-- npm 或 yarn
-- MetaMask 钱包 (测试网络)
-
-### 部署步骤
-
-1. **编译合约**
-   ```bash
-   # 使用 Remix 或 Hardhat 编译
-   npx hardhat compile
-   ```
-
-2. **部署 Stage1 合约**
-   - 部署时传入代币名称和符号（如 "GameToken", "GT"）
-   - 记录部署后的合约地址
-
-3. **部署 Stage2 合约**
-   - 部署时传入 Stage1 合约地址作为构造参数
-   - 确保 Stage1 合约中有足够的代币用于奖励
-
-4. **配置代币奖励**
-   - 向 Stage1 合约铸造代币
-   - 将代币转入 Stage2 合约作为奖励池
-
-## 合约交互
-
-### Stage1 代币操作
-
-```solidity
-// 铸造代币（仅所有者）
-stage1.mint(to, amount);
-
-// 查询余额
-stage1.balanceOf(account);
-
-// 授权转账
-stage1.approve(spender, amount);
-stage1.transferFrom(from, to, amount);
-
-// 出售代币
-stage1.sell(tokenAmount);
-
-// 提取ETH（仅所有者）
-stage1.withdraw();
+```text
+.
+├─ contracts/
+│  ├─ Stage1.sol
+│  └─ Stage2.sol
+├─ docs/
+│  ├─ README.md
+│  ├─ user/
+│  ├─ deployment/
+│  ├─ internal/
+│  ├─ project/
+│  └─ final_submit/
+├─ scripts/
+├─ tests/
+└─ remix.config.json
 ```
 
-### Stage2 游戏操作
+## 快速开始（Remix）
 
-```solidity
-// 第一阶段：A 创建游戏
-stage2.createDiceGame{value: betAmount}(fingerPrintForA);
+1. 在 Remix 打开 `contracts/Stage1.sol` 并部署（构造参数：`name`, `symbol`）
+2. 部署 `contracts/Stage2.sol`（构造参数为 Stage1 地址）
+3. 用 Stage1 给 Stage2 预充代币奖励池（`transfer(stage2, amount)`）
+4. 游戏流程：
+   - A：`createDiceGame(fingerPrintForA)`（附带 ETH）
+   - B：`joinGame(fingerPrintForB)`（ETH 必须等额）
+   - A/B：`revealA`、`revealB`
+   - 超时场景：`checkTimeout()`
 
-// 第二阶段：B 加入游戏
-stage2.joinGame{value: betAmount}(fingerPrintForB);
+## 关键接口说明
 
-// A 揭示秘密
-stage2.revealA(secretA);
+### Stage1（当前实现）
 
-// B 揭示秘密
-stage2.revealB(secretB);
+- `getName()` / `getSymbol()` / `getPrice()`
+- `totalSupply()` / `balanceOf(account)`
+- `transfer(to, value)`
+- `mint(to, value)`（仅 owner）
+- `sell(value)`（600 wei / token）
+- `close()`（仅 owner，销毁并转出剩余 ETH）
 
-// 超时处理（可选）
-stage2.checkTimeout();
+> 注意：Stage1 为课程要求的**严格自定义 API**，并非完整 ERC20（无 `approve/allowance/transferFrom`）。
 
-// 取消游戏（仅创建者，可取消时段内）
-stage2.cancelGame();
-```
+### Stage2（当前实现）
 
-## 文档
+- `createDiceGame(bytes32)`
+- `joinGame(bytes32)`
+- `revealA(bytes32)` / `revealB(bytes32)`
+- `checkTimeout()`
+- `cancelGame()`
+- `getRemainingTimeout()` / `getRemainingCancelTime()`
 
-- [使用文档](./docs/user-guide.md)
-- [功能说明](./docs/functionality.md)
-- [更新报告](./docs/update-report.md)
+## 文档导航
 
-## 安全说明
-
-1. 部署前请进行完整的安全审计
-2. 所有者地址请妥善保管，切勿公开
-3. 建议在测试网充分验证后再部署到主网
+- [文档总览](./docs/README.md)
+- [用户使用指南](./docs/user/user-guide.md)
+- [功能与接口说明](./docs/user/functionality.md)
+- [部署指南](./docs/deployment/deployment-guide.md)
+- [部署记录（实际交易）](./docs/deployment/record.md)
+- [变更摘要（Git）](./docs/internal/update-report.md)
 
 ## 许可证
 
-MIT License
+MIT
 
 ---
 
-*项目最后更新: 2026年3月*
+最后更新：2026-04-24

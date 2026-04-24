@@ -1,5 +1,7 @@
 # Sepolia 部署指南
 
+> 本文档基于当前仓库源码（`contracts/Stage1.sol`、`contracts/Stage2.sol`）与 Remix 流程。
+
 ## 前置准备
 
 ### 1. 获取Sepolia测试ETH
@@ -157,7 +159,7 @@ Etherscan链接: https://sepolia.etherscan.io/address/0x________________
 1. 保持 Player A 账户
 2. 调用 `revealA`
 3. 参数:
-   - `_secretA`: `keccak256(abi.encodePacked("secretA123"))`
+   - `_secretA`: 与创建指纹对应的原始 `bytes32 secretA`
 4. 确认交易
 5. 记录交易哈希: `0x________________`
 
@@ -165,7 +167,7 @@ Etherscan链接: https://sepolia.etherscan.io/address/0x________________
 1. 切换到 Player B 账户
 2. 调用 `revealB`
 3. 参数:
-   - `_secretB`: `keccak256(abi.encodePacked("secretB456"))`
+   - `_secretB`: 与创建指纹对应的原始 `bytes32 secretB`
 4. 确认交易
 5. 记录交易哈希: `0x________________`
 
@@ -209,3 +211,7 @@ A: 确保betAmount与创建游戏时相同
 
 ### Q: 如何计算keccak256
 A: 在Remix的Solidity Compiler页面，展开"keccak256"工具，输入abi.encodePacked的结果
+
+---
+
+最后更新：2026-04-24
